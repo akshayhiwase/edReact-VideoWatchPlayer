@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'react-redux'
 import classes from './WatchPage.module.css';
 import Axios from 'axios';
 import VideoCard from '../../Components/VideoCard/VideoCard';
@@ -11,22 +12,23 @@ class WatchPage extends React.Component {
         currentVideoId: 0,
     }
 
-    getVideoDetails = () => {       
+    getVideoDetails = () => {
         window.scrollTo(0, 0)
         Axios.get('https://5d76bf96515d1a0014085cf9.mockapi.io/video/' + this.props.match.params.id)
-        .then(response => {
-            const videoDetails = {...response.data};
-            Axios.get('https://5d76bf96515d1a0014085cf9.mockapi.io/playlist')
             .then(response => {
-                this.setState({videoList: [...response.data], videoData: videoDetails, showLoader: false});
+                const videoDetails = { ...response.data };
+                this.props.updatedCount(this.props.match.params.id)
+                Axios.get('https://5d76bf96515d1a0014085cf9.mockapi.io/playlist')
+                    .then(response => {
+                        this.setState({ videoList: [...response.data], videoData: videoDetails, showLoader: false });
+                    })
+                    .catch(err => {
+                        alert('Failed => ' + err.response.data);
+                    })
             })
             .catch(err => {
                 alert('Failed => ' + err.response.data);
             })
-        })
-        .catch(err => {
-            alert('Failed => ' + err.response.data);
-        })
     }
 
     componentDidMount() {
@@ -34,7 +36,7 @@ class WatchPage extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if(this.props.match.params.id !== prevProps.match.params.id) {
+        if (this.props.match.params.id !== prevProps.match.params.id) {
             this.getVideoDetails();
         }
     }
@@ -45,19 +47,19 @@ class WatchPage extends React.Component {
                 <VideoCard key={item.id} isPlaylist={true} id={item.id} thumbnail={item.thumbnail} title={item.title} />
             )
         })
-        
-        return(
+
+        return (
             <div className={classes.MainContainer}>
                 <div className={classes.PlayerSection}>
                     <div className={classes.VideoDetails}>
-                    {
-                        this.state.showLoader ? null : 
-                        <div>
-                            <iframe className={classes.Player} title={'Video'} src={`https://player.vimeo.com/video/${this.state.videoData.vimeoId}?title=0&byline=0`} frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>                            
-                            <h1>{this.state.videoData.title}</h1>
-                            <p>{this.state.videoData.description}</p>
-                        </div>
-                    }
+                        {
+                            this.state.showLoader ? null :
+                                <div>
+                                    <iframe className={classes.Player} title={'Video'} src={`https://player.vimeo.com/video/${this.state.videoData.vimeoId}?title=0&byline=0`} frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+                                    <h1>{this.state.videoData.title}</h1>
+                                    <p>{this.state.videoData.description}</p>
+                                </div>
+                        }
                     </div>
 
                     <div className={classes.PlaylistSection}>
@@ -70,5 +72,9 @@ class WatchPage extends React.Component {
         );
     }
 }
-
-export default WatchPage;
+const propsToDispatch = (dispatch) => {
+    return {
+        updatedCount: (vId) => dispatch({ type: "INC_COUNT", videoId: vId })
+    }
+}
+export default connect(null, propsToDispatch)(WatchPage);
