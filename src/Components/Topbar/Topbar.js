@@ -14,7 +14,7 @@ const Topbar = (props) => {
             {
                 <Link to='/login' className={classes.MenuItem}>LogIn</Link>
             }
-            <div>
+            <div className={classes.counter}>
                 <h3>Unique Count : {props.uniqueCount.length}</h3>
             </div>
         </div>
